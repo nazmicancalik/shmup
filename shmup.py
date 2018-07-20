@@ -1,8 +1,13 @@
+# Art from Kenney.nl
+# Frozen Jam by tgfcoder <https://twitter.com/tgfcoder> licensed under CC-BY-3
+# <http://creativecommons.org/licenses/by/3.0/>
+
 import pygame as pg
 import random
 from os import path
 
 img_dir = path.join(path.dirname(__file__), 'img')
+sound_dir = path.join(path.dirname(__file__), 'sound')
 
 WIDTH = 720
 HEIGHT = 900
@@ -17,8 +22,11 @@ BLUE = (0, 0, 255)
 BACKGROUND = (72, 172, 183)
 TEXT_COLOR = WHITE
 SCORE_FONT = 20
+PLAYER_SPEED = 8
+METEOR_COUNT = 12
 
 # INIT
+pg.mixer.pre_init(44100, -16, 1, 512)
 pg.init()
 pg.mixer.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -52,9 +60,9 @@ class Player(pg.sprite.Sprite):
 
         key_states = pg.key.get_pressed()
         if key_states[pg.K_LEFT]:
-            self.speedx = -6
+            self.speedx = -PLAYER_SPEED
         if key_states[pg.K_RIGHT]:
-            self.speedx = 6
+            self.speedx = PLAYER_SPEED
 
         self.rect.x += self.speedx
 
@@ -68,6 +76,7 @@ class Player(pg.sprite.Sprite):
         bullet = Bullet(self.rect.centerx, self.rect.top)
         all_sprites.add(bullet)
         bullets.add(bullet)
+        shoot_sound.play()
 
 
 class Mob(pg.sprite.Sprite):
@@ -80,8 +89,8 @@ class Mob(pg.sprite.Sprite):
         self.radius = int(self.rect.width * .85 / 2)
         self.rect.x = random.randint(0, WIDTH - self.rect.width)
         self.rect.bottom = random.randint(-100, -40)
-        self.speedy = random.randint(2, 5)
-        self.speedx = random.randint(4, 5)
+        self.speedy = random.randint(3, 6)
+        self.speedx = random.randint(2, 4)
         self.rot = 0
         self.rot_speed = random.randint(-8, 8)
         self.last_update = pg.time.get_ticks()
@@ -140,6 +149,14 @@ meteor_img_2 = pg.image.load(path.join(img_dir, "meteor_2.png")).convert()
 meteors = [meteor_img_1, meteor_img_2]
 laser_img = pg.image.load(path.join(img_dir, "laser.png")).convert()
 
+# LOAD GAME SOUNDS
+shoot_sound = pg.mixer.Sound(path.join(sound_dir, "shoot.wav"))
+shoot_sound.set_volume(0.3)
+expl_sounds = []
+for snd in ['explosion_1.wav', 'explosion_2.wav']:
+    expl_sounds.append(pg.mixer.Sound(path.join(sound_dir, snd)))
+pg.mixer.music.load(path.join(sound_dir, "background.ogg"))
+pg.mixer.music.set_volume(0.7)
 
 all_sprites = pg.sprite.Group()
 mobs = pg.sprite.Group()
@@ -148,12 +165,14 @@ bullets = pg.sprite.Group()
 player = Player()
 all_sprites.add(player)
 
-for i in range(5):
+for i in range(METEOR_COUNT):
     m = Mob()
     all_sprites.add(m)
     mobs.add(m)
 
 score = 0
+# Loop from start
+pg.mixer.music.play(loops=-1)
 
 # GAME LOOP
 running = True
@@ -175,6 +194,7 @@ while running:
     hits = pg.sprite.groupcollide(mobs, bullets, True, True)
     for hit in hits:
         score += 5
+        random.choice(expl_sounds).play()
         m = Mob()
         all_sprites.add(m)
         mobs.add(m)
