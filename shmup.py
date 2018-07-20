@@ -15,6 +15,8 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 BACKGROUND = (72, 172, 183)
+TEXT_COLOR = WHITE
+SCORE_FONT = 20
 
 # INIT
 pg.init()
@@ -22,6 +24,16 @@ pg.mixer.init()
 screen = pg.display.set_mode((WIDTH, HEIGHT))
 pg.display.set_caption("___Shmup___")
 clock = pg.time.Clock()
+
+font_name = pg.font.match_font('arial')
+
+
+def draw_text(surf, text, size, x, y):
+    font = pg.font.Font(font_name, size)
+    text_surface = font.render(text, True, TEXT_COLOR)
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x, y)
+    surf.blit(text_surface, text_rect)
 
 
 class Player(pg.sprite.Sprite):
@@ -141,6 +153,8 @@ for i in range(5):
     all_sprites.add(m)
     mobs.add(m)
 
+score = 0
+
 # GAME LOOP
 running = True
 while running:
@@ -160,6 +174,7 @@ while running:
     # Check to see if a bullet hits a mob / True True if hits both sprites deleted
     hits = pg.sprite.groupcollide(mobs, bullets, True, True)
     for hit in hits:
+        score += 5
         m = Mob()
         all_sprites.add(m)
         mobs.add(m)
@@ -174,6 +189,7 @@ while running:
     screen.fill(BACKGROUND)
     screen.blit(background, background_rect)
     all_sprites.draw(screen)
+    draw_text(screen, str(score), SCORE_FONT, WIDTH / 2, 10)
 
     # After drawing everything, flip the display
     pg.display.flip()
