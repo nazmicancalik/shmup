@@ -30,6 +30,7 @@ class Player(pg.sprite.Sprite):
         self.image = pg.transform.scale(player_img, (75, 58))
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
+        self.radius = 30
         self.rect.centerx = WIDTH / 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
@@ -63,6 +64,7 @@ class Mob(pg.sprite.Sprite):
         self.image = pg.transform.scale(random.choice(meteors), (50, 48))
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
+        self.radius = int(self.rect.width * .85 / 2)
         self.rect.x = random.randint(0, WIDTH - self.rect.width)
         self.rect.bottom = random.randint(-100, -40)
         self.speedy = random.randint(2, 5)
@@ -147,7 +149,8 @@ while running:
         mobs.add(m)
 
     # Check for player collisions with mob
-    hits = pg.sprite.spritecollide(player, mobs, False)
+    hits = pg.sprite.spritecollide(
+        player, mobs, False, pg.sprite.collide_circle)
     if hits:
         running = False
 
